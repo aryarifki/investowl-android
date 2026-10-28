@@ -71,13 +71,22 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME}"
           if [[ ! "$VERSION" =~ ^v[0-9] ]]; then
-            VERSION="v1.0.0"
+            VERSION="v1.1.0"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
           mkdir -p artifacts
-          cp app/build/outputs/apk/release/app-release.apk artifacts/investowl-android-${VERSION}-release.apk || cp app/build/outputs/apk/release/app-release-unsigned.apk artifacts/investowl-android-${VERSION}-release.apk
-          cp app/build/outputs/bundle/release/app-release.aab artifacts/investowl-android-${VERSION}-release.aab || true
+          for apk in app/build/outputs/apk/release/*.apk; do
+            if [ -f "$apk" ]; then
+              fname=$(basename "$apk")
+              target_name=$(echo "$fname" | sed "s/^app-/investowl-android-${VERSION}-/" | sed "s/-release\.apk/\.apk/")
+              cp "$apk" "artifacts/${target_name}"
+            fi
+          done
+
+          if [ -f app/build/outputs/bundle/release/app-release.aab ]; then
+            cp app/build/outputs/bundle/release/app-release.aab "artifacts/investowl-android-${VERSION}-release.aab"
+          fi
 
           ls -la artifacts/
 
@@ -90,19 +99,26 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/investowl-android-*-release.apk
-            artifacts/investowl-android-*-release.aab
+            artifacts/*.apk
+            artifacts/*.aab
           body: |
             # 🚀 The Investowl Native Android Release ${{ steps.package_artifacts.outputs.version }}
 
             Aplikasi Native Android resmi **The Investowl** (Kotlin + Jetpack Compose) dengan sistem desain Material Design 3 Expressive (Seed `#F9EDE1`).
+            Telah dioptimasi untuk arsitektur modern 64-bit (**Android 17 / 16 / 15 / 14**) dengan dukungan memori **16 KB Page Alignment** dan tetap kompatibel ke bawah (**Android 8.0+**).
 
-            ### 📦 Modul & Fitur Unggulan
-            - **:feature:home** — Quick Market Monitor, IHSG Summary & Global Ticker Search
-            - **:feature:ticker** — Detail Saham 6 Dynamic Tabs & Governance Breadcrumb Engine
-            - **:feature:ownership** — Dashboard Kepemilikan Publik KSEI (Balancepos & Statis) & IDX BAE
-            - **:feature:konglo** — Matriks 8 Grup Konglomerasi IDX & Interactive Ownership Graph
-            - **:feature:foreign** — Foreign Exodus Radar 6-Fase & Sektor Rotation RRG
+            ### 🎯 Target Arsitektur Biner (ABI Splits)
+            - **`investowl-android-${{ steps.package_artifacts.outputs.version }}-arm64-v8a.apk`**: Khusus perangkat modern 64-bit ARM (perangkat Android 17 / Snapdragon / Exynos / Dimensity)
+            - **`investowl-android-${{ steps.package_artifacts.outputs.version }}-armeabi-v7a.apk`**: Kompatibel perangkat 32-bit legacy
+            - **`investowl-android-${{ steps.package_artifacts.outputs.version }}-x86_64.apk`**: Emulator PC, Chromebook, & Android x86
+            - **`investowl-android-${{ steps.package_artifacts.outputs.version }}-universal.apk`**: Paket universal lengkap (kompatibel semua device)
+            - **`investowl-android-${{ steps.package_artifacts.outputs.version }}-release.aab`**: Google Play App Bundle resmi
+
+            ### 📦 Modul & Paritas Fitur Web App (investowl.avenia.my.id)
+            - **Live Host Produksi**: Terhubung otomatis ke backend live `https://investowl.avenia.my.id` dengan dukungan Dynamic Host Selector.
+            - **Parameters & Pipeline Drawer**: Slide-over drawer dari Top Bar untuk memilih Universe bursa, tanggal historis vs live, window hari, serta eksekusi pipeline & purge cache.
+            - **Research Hub (Riset)**: Menggabungkan **Ownership KSEI**, **Group Konglomerasi IDX**, dan **Explorer Screener** dalam satu navigasi terpadu.
+            - **5-Item Core Bottom Navigation**: Home, Emiten Detail, Signal & Backtest Lab, Foreign Exodus Radar, dan Riset Hub.
             - **:feature:whales** — Broker Whales Tracker & Portofolio Akumulasi Broker
             - **:feature:signal** — AI Wyckoff/VCP Signal Scanner, P(WIN) Honest Null & Dynamic Half-Kelly
             - **:feature:backtest** — Multi-Horizon T+1..T+20 Win-Rate & Strategy Validation Lab

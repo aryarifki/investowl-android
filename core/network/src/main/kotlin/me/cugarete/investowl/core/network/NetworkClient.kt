@@ -14,13 +14,53 @@ import java.util.concurrent.TimeUnit
 
 object NetworkClient {
 
-    private const val DEFAULT_BASE_URL = "https://theinvestowl.cugarete.me"
+    const val DEFAULT_BASE_URL = "https://investowl.avenia.my.id"
+
+    @Volatile
+    var currentBaseUrl: String = DEFAULT_BASE_URL
 
     val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
         coerceInputValues = true
         encodeDefaults = true
+    }
+
+    /**
+     * Interceptor yang memperbolehkan pengalihan Base URL secara dinamis saat runtime
+     */
+    class DynamicHostInterceptor : Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            var request = chain.request()
+            val hostStr = currentBaseUrl.trim()
+            if (hostStr.isNotEmpty()) {
+                try {
+                    val fullUrl = if (hostStr.startsWith("http://") || hostStr.startsWith("https://")) {
+                        hostStr
+                    } else {
+                        "https://$hostStr"
+                    }
+                    val targetUri = java.net.URI(fullUrl)
+                    val newHttpUrl = request.url.newBuilder()
+                        .scheme(targetUri.scheme ?: "https")
+                        .host(targetUri.host ?: request.url.host)
+                        .apply {
+                            if (targetUri.port != -1) {
+                                port(targetUri.port)
+                            } else if (targetUri.scheme == "http") {
+                                port(80)
+                            } else {
+                                port(443)
+                            }
+                        }
+                        .build()
+                    request = request.newBuilder().url(newHttpUrl).build()
+                } catch (e: Exception) {
+                    // Gunakan URL awal jika parsing gagal
+                }
+            }
+            return chain.proceed(request)
+        }
     }
 
     /**
@@ -48,6 +88,7 @@ object NetworkClient {
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(15, TimeUnit.SECONDS)
+            .addInterceptor(DynamicHostInterceptor())
             .addNetworkInterceptor(CacheResponseInterceptor())
 
         if (cacheDir != null) {

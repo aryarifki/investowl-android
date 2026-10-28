@@ -16,12 +16,21 @@ android {
         applicationId = "me.cugarete.investowl"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
         }
     }
 
@@ -80,10 +89,26 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        jniLibs {
+            useLegacyPackaging = false
+        }
     }
     lint {
         checkReleaseBuilds = false
         abortOnError = false
+    }
+
+    applicationVariants.all {
+        outputs.mapNotNull { it as? com.android.build.gradle.internal.api.ApkVariantOutputImpl }.forEach { output ->
+            val abi = output.getFilter("ABI")
+            val abiMultiplier = when (abi) {
+                "armeabi-v7a" -> 1
+                "arm64-v8a" -> 2
+                "x86_64" -> 3
+                else -> 0
+            }
+            output.versionCodeOverride = (defaultConfig.versionCode ?: 1) * 10 + abiMultiplier
+        }
     }
 }
 

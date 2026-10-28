@@ -155,6 +155,39 @@ interface InvestowlApi {
     @GET("/api/v1/ownership/groups/{groupId}")
     suspend fun getCongloGroupDetail(@Path("groupId") groupId: String): CongloGroupDetailResponse
 
+    @GET("/api/v1/ownership/explorer")
+    suspend fun getOwnershipExplorer(
+        @Query("mode") mode: String = "stocks",
+        @Query("condition") condition: String? = null,
+        @Query("q") query: String? = null,
+        @Query("limit") limit: Int = 50,
+        @Query("offset") offset: Int = 0
+    ): ExplorerResponse
+
+    @GET("/api/v1/ownership/explorer/ct")
+    suspend fun getOwnershipExplorerCt(
+        @Query("mode") mode: String = "stocks",
+        @Query("condition") condition: String? = null,
+        @Query("limit") limit: Int = 50,
+        @Query("offset") offset: Int = 0
+    ): ExplorerResponse
+
+    @GET("/api/bandar/system-status")
+    suspend fun getBandarSystemStatus(): Map<String, kotlinx.serialization.json.JsonElement>
+
+    @POST("/api/bandar/universe/refresh")
+    suspend fun refreshUniverse(): Map<String, kotlinx.serialization.json.JsonElement>
+
+    @POST("/api/bandar/pipeline/run")
+    suspend fun runBandarPipeline(
+        @Body payload: Map<String, kotlinx.serialization.json.JsonElement> = emptyMap()
+    ): Map<String, kotlinx.serialization.json.JsonElement>
+
+    @POST("/api/bandar/pipeline/backfill")
+    suspend fun runBandarBackfill(
+        @Body payload: Map<String, kotlinx.serialization.json.JsonElement> = emptyMap()
+    ): Map<String, kotlinx.serialization.json.JsonElement>
+
     // --- System Logs ---
     @GET("/api/logs/daily")
     suspend fun getDailyLogs(): DailyLogsResponse
@@ -182,4 +215,7 @@ interface InvestowlApi {
 
     @POST("/api/logs/cache/purge")
     suspend fun purgeCache(@Body request: Map<String, String>): Map<String, String>
+
+    @POST("/api/logs/cache/purge")
+    suspend fun purgeCachePattern(@Query("pattern") pattern: String = "*"): Map<String, String>
 }

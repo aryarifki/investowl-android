@@ -40,6 +40,9 @@ data class TickerRoute(val ticker: String)
 object OwnershipRoute
 
 @Serializable
+object ResearchRoute
+
+@Serializable
 object KongloRoute
 
 @Serializable
@@ -94,9 +97,15 @@ fun InvestowlNavHost(
         }
 
         composable<OwnershipRoute> {
-            val viewModel = OwnershipViewModel(appContainer.api)
-            OwnershipScreen(
-                viewModel = viewModel,
+            ResearchScreen(
+                appContainer = appContainer,
+                onNavigateToTicker = { ticker -> navController.navigate(TickerRoute(ticker)) }
+            )
+        }
+
+        composable<ResearchRoute> {
+            ResearchScreen(
+                appContainer = appContainer,
                 onNavigateToTicker = { ticker -> navController.navigate(TickerRoute(ticker)) }
             )
         }

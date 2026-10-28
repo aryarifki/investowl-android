@@ -20,6 +20,7 @@ class SessionManager(private val context: Context) {
 
     private val KEY_ENCRYPTED_USER = stringPreferencesKey("encrypted_user_json")
     private val KEY_AUTH_TOKEN = stringPreferencesKey("encrypted_token")
+    private val KEY_BASE_URL = stringPreferencesKey("custom_base_url")
 
     private var aead: Aead? = null
 
@@ -80,6 +81,17 @@ class SessionManager(private val context: Context) {
             user.role == "admin" -> AuthState.ADMIN
             user.isApproved -> AuthState.ACTIVE_USER
             else -> AuthState.PENDING_APPROVAL
+        }
+    }
+
+    val baseUrlFlow: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_BASE_URL] ?: "https://investowl.avenia.my.id"
+    }
+
+    suspend fun setBaseUrl(url: String) {
+        val trimmed = url.trim().removeSuffix("/")
+        context.dataStore.edit { prefs ->
+            prefs[KEY_BASE_URL] = trimmed
         }
     }
 

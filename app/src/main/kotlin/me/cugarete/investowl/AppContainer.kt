@@ -1,6 +1,9 @@
 package me.cugarete.investowl
 
 import android.content.Context
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import me.cugarete.investowl.core.database.AppDatabase
 import me.cugarete.investowl.core.database.SessionManager
 import me.cugarete.investowl.core.database.WatchlistDao
@@ -17,6 +20,14 @@ class AppContainer(context: Context) {
 
     val api: InvestowlApi = NetworkClient.createApi(
         cacheDir = context.cacheDir,
-        baseUrl = "https://theinvestowl.cugarete.me"
+        baseUrl = NetworkClient.DEFAULT_BASE_URL
     )
+
+    init {
+        CoroutineScope(Dispatchers.IO).launch {
+            sessionManager.baseUrlFlow.collect { hostUrl ->
+                NetworkClient.currentBaseUrl = hostUrl
+            }
+        }
+    }
 }

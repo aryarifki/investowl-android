@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
 
     private fun extractTickerFromIntent(intent: Intent?): String? {
         val data: Uri? = intent?.data
-        if (data != null && data.host?.contains("cugarete.me") == true) {
+        if (data != null && (data.host?.contains("avenia.my.id") == true || data.host?.contains("cugarete.me") == true)) {
             val pathSegments = data.pathSegments
             if (pathSegments.isNotEmpty()) {
                 val segment = pathSegments[0].uppercase().trim()

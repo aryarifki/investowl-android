@@ -189,3 +189,14 @@ data class InvestorDetailResponse(
     val summary: InvestorDetailSummary = InvestorDetailSummary(),
     val holdings: List<InvestorHoldingItem> = emptyList()
 )
+
+@Immutable
+@Serializable
+data class ExplorerResponse(
+    val mode: String = "stocks",
+    val count: Int = 0,
+    val total: Int = 0,
+    val limit: Int = 50,
+    val offset: Int = 0,
+    val results: List<kotlinx.serialization.json.JsonObject> = emptyList()
+)
